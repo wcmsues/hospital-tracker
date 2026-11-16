@@ -1,0 +1,39 @@
+name: 医院招聘监测
+
+on:
+  schedule:
+    # UTC 时间，北京时间每天 8:30 和 18:30 各跑一次
+    - cron: '30 0 * * *'
+    - cron: '30 10 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 抓取并比对招聘岗位
+        env:
+          SERVERCHAN_KEY: ${{ secrets.SERVERCHAN_KEY }}
+          WECOM_WEBHOOK: ${{ secrets.WECOM_WEBHOOK }}
+        run: node scripts/monitor.mjs
+
+      - name: 提交结果
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add notices.json .monitor-state.json
+          if git diff --staged --quiet; then
+            echo "没有变化"
+          else
+            git commit -m "chore: 更新招聘监测 $(date '+%Y-%m-%d %H:%M')"
+            git push
+          fi
