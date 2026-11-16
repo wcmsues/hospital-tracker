@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>投递清单</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="投递清单">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="description" content="上海三区医院求职投递管理">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<!-- 顶部栏 -->
+<header class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <div class="navbar-title" id="navbarTitle">投递清单</div>
+    <button class="navbar-btn" id="btnAdd" aria-label="添加医院">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<!-- 页面 1：清单 -->
+<main class="page" id="page-list">
+  <h1 class="large-title">投递清单</h1>
+  <p class="large-sub" id="listSub">—</p>
+  <div id="noticeBar"></div>
+
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+      <circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/>
+    </svg>
+    <input id="searchInput" type="search" placeholder="搜索医院、区域、备注" autocomplete="off" enterkeyhint="search">
+  </div>
+
+  <div class="segmented" id="segPriority">
+    <button data-v="all" class="on">全部</button>
+    <button data-v="主投">主投</button>
+    <button data-v="可冲">可冲</button>
+    <button data-v="备选">备选</button>
+  </div>
+
+  <div class="chips" id="chipStatus">
+    <button class="chip on" data-v="all">全部状态</button>
+    <button class="chip" data-v="hiring">正在招</button>
+    <button class="chip" data-v="todo">未投</button>
+    <button class="chip" data-v="applied">已投</button>
+    <button class="chip" data-v="screening">筛选中</button>
+    <button class="chip" data-v="interview">面试</button>
+    <button class="chip" data-v="offer">Offer</button>
+    <button class="chip" data-v="rejected">未通过</button>
+    <button class="chip" data-v="skip">不投</button>
+  </div>
+
+  <div id="listBody"></div>
+  <div class="hint" style="padding:18px 20px 8px">点击医院可记录投递状态、渠道和跟进时间；数据仅保存在本机。</div>
+</main>
+
+<!-- 页面 2：进度 -->
+<main class="page" id="page-progress" hidden>
+  <h1 class="large-title">进度</h1>
+  <p class="large-sub" id="progressSub">—</p>
+
+  <div class="stats" id="statsGrid"></div>
+
+  <div class="group">
+    <div class="group-head"><b>投递漏斗</b><span id="funnelRate"></span></div>
+    <div class="card pad"><div class="funnel" id="funnel"></div></div>
+  </div>
+
+  <div class="group">
+    <div class="group-head"><b>该跟进了</b><span id="followCount"></span></div>
+    <div class="card" id="followList"></div>
+  </div>
+
+  <div class="group">
+    <div class="group-head"><b>渠道效果</b><span>投递数 / 进面率</span></div>
+    <div class="card pad" id="channelStats"></div>
+  </div>
+
+  <div class="group">
+    <div class="group-head"><b>区域分布</b><span>已投 / 总数</span></div>
+    <div class="card pad" id="districtStats"></div>
+  </div>
+  <div style="height:14px"></div>
+</main>
+
+<!-- 页面 3：设置 -->
+<main class="page" id="page-settings" hidden>
+  <h1 class="large-title">设置</h1>
+  <p class="large-sub">数据备份与安装</p>
+
+  <div class="group">
+    <div class="group-head"><b>数据</b></div>
+    <div class="card">
+      <div class="row" id="btnExport">
+        <div class="row-main"><div class="row-title">导出备份</div><div class="row-meta">保存为 JSON 文件</div></div>
+        <svg class="chev" viewBox="0 0 8 13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1.5 1L6.5 6.5L1.5 12"/></svg>
+      </div>
+      <div class="row" id="btnImport">
+        <div class="row-main"><div class="row-title">导入备份</div><div class="row-meta">从 JSON 文件恢复</div></div>
+        <svg class="chev" viewBox="0 0 8 13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1.5 1L6.5 6.5L1.5 12"/></svg>
+      </div>
+      <div class="row" id="btnCopyBackup">
+        <div class="row-main"><div class="row-title">复制备份文本</div><div class="row-meta">粘贴到备忘录保存</div></div>
+        <svg class="chev" viewBox="0 0 8 13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1.5 1L6.5 6.5L1.5 12"/></svg>
+      </div>
+      <div class="row" id="btnReset">
+        <div class="row-main"><div class="row-title" style="color:var(--red)">清空投递记录</div><div class="row-meta">医院清单保留</div></div>
+      </div>
+    </div>
+    <input type="file" id="fileInput" accept=".json,application/json" hidden>
+  </div>
+
+  <div class="group">
+    <div class="group-head"><b>添加到主屏幕</b></div>
+    <div class="card pad">
+      <div style="font-size:14.5px;line-height:1.75;color:var(--label2)">
+        <b style="color:var(--label)">iPhone / iPad</b><br>
+        用 Safari 打开本页 → 点底部「分享」→ 选「添加到主屏幕」→ 完成。<br><br>
+        <b style="color:var(--label)">Android</b><br>
+        用 Chrome 打开 → 右上角菜单 → 「安装应用」或「添加到主屏幕」。
+      </div>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-head"><b>关于</b></div>
+    <div class="card">
+      <div class="field"><span class="lb">医院总数</span><span class="vl" id="aboutTotal">—</span></div>
+      <div class="field"><span class="lb">数据来源</span><span class="vl">上海三区招聘渠道表</span></div>
+      <div class="field"><span class="lb">版本</span><span class="vl">1.0.0</span></div>
+    </div>
+    <div class="hint">所有数据保存在此设备的浏览器中，不会上传到任何服务器。换设备前请先导出备份。</div>
+  </div>
+  <div style="height:20px"></div>
+</main>
+
+<!-- 底部 tab -->
+<nav class="tabbar" id="tabbar">
+  <button class="on" data-tab="list">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+      <path d="M9 6.5h11M9 12h11M9 17.5h11"/>
+      <circle cx="4.6" cy="6.5" r="1.15" fill="currentColor" stroke="none"/>
+      <circle cx="4.6" cy="12" r="1.15" fill="currentColor" stroke="none"/>
+      <circle cx="4.6" cy="17.5" r="1.15" fill="currentColor" stroke="none"/>
+    </svg>
+    <span>清单</span>
+  </button>
+  <button data-tab="progress">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+      <path d="M5 19.5V13M12 19.5V4.5M19 19.5V9"/>
+    </svg>
+    <span>进度</span>
+  </button>
+  <button data-tab="settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+      <path d="M4 7.5h8M17 7.5h3M4 16.5h3M12 16.5h8"/>
+      <circle cx="14.5" cy="7.5" r="2.2"/><circle cx="9.5" cy="16.5" r="2.2"/>
+    </svg>
+    <span>设置</span>
+  </button>
+</nav>
+
+<!-- 详情页 -->
+<div class="detail" id="detail">
+  <div class="detail-nav">
+    <div class="inner">
+      <button class="back-btn" id="btnBack">
+        <svg viewBox="0 0 11 19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 1.5L2 9.5l7.5 8"/></svg>
+        清单
+      </button>
+      <div class="t">医院详情</div>
+    </div>
+  </div>
+  <div class="detail-body"><div class="detail-inner" id="detailBody"></div></div>
+</div>
+
+<!-- 弹层 -->
+<div class="backdrop" id="backdrop"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-head">
+    <button id="sheetCancel" style="color:var(--label2)">取消</button>
+    <h3 id="sheetTitle">添加医院</h3>
+    <button id="sheetSave">保存</button>
+  </div>
+  <div class="sheet-body" id="sheetBody"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
+</script>
+</body>
+</html>
